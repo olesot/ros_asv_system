@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 find_package(cmake_modules REQUIRED)
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -71,13 +71,13 @@ find_package(Eigen REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  asv_msgs
-  geometry_msgs
-  nav_msgs
-  std_msgs
-)
+#generate_messages(
+#  DEPENDENCIES
+#  asv_msgs
+#  geometry_msgs
+#  nav_msgs
+#  std_msgs
+#)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -125,7 +125,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${EIGEN_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -143,7 +143,9 @@ add_executable(asv_ctrl_sb_mpc_node src/asv_ctrl_sb_mpc_node.cpp src/asv_ctrl_sb
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(asv_ctrl_sb_mpc_node asv_ctrl_sb_mpc_node asv_ctl_sb_mpc_generate_messages_cpp)
+add_dependencies(asv_ctrl_sb_mpc_node
+  asv_ctrl_sb_mpc_node
+  ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(asv_ctrl_sb_mpc_node ${catkin_LIBRARIES})
