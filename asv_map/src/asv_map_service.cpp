@@ -7,7 +7,7 @@ MapService::MapService(ros::NodeHandle nh, double a, double b, double oLat, doub
   nh_(nh),
   Vincent(a, b, oLat, oLon)
 {
-  path_ = ros::package::getPath("asv_map_service");
+  path_ = ros::package::getPath("asv_map");
   path_.append("/config/maps/polyHazards.shp");
 
   GDALAllRegister();
@@ -47,10 +47,12 @@ bool MapService::intersects(asv_msgs::Intersect::Request &req,
   double distance = sqrt(x*x + y*y);
   // ENU TO NED swap x y
   double azimuth = atan2(x, y);
-  ROS_INFO("dist: %f, az: %f", distance, azimuth);
+  //ROS_INFO("dist: %f, az: %f", distance, azimuth);
   double lat,lon;
-  direct(azimuth, distance, lat, lon);
-  ROS_INFO("Lat: %.9f, Lon: %.9f", lat, lon);
+  lat = req.pos.x;
+  lon = req.pos.y;
+//  direct(azimuth, distance, lat, lon);
+ // ROS_INFO("Lat: %.9f, Lon: %.9f", lat, lon);
   point_->setX(lon);
   point_->setY(lat);
 
@@ -62,9 +64,11 @@ bool MapService::intersects(asv_msgs::Intersect::Request &req,
     if(point_->Intersects(geom))
     {
   //    ROS_INFO("InterSects at (%f, %f)!", point_->getX(), point_->getY());
+      res.intersects = true;
       return true;
     }
   }
 //  ROS_INFO("Do not intersect at (%f, %f)!", point_->getX(), point_->getY());
-  return false;
+  res.intersects = false;
+  return true;
 }

@@ -87,11 +87,11 @@ void Vincent::direct(double alpha_1, double s, double &lat, double &lon)
   double lat_pow = std::pow((s_U_1_*s_sigma - c_U_1_*c_sigma*c_alpha_1),2);
   double lat_denum = (1 - f_)*sqrt(ss_alpha + lat_pow);
   lat = RAD2DEG*atan(lat_num/lat_denum);    // 11
-  ROS_INFO("Vincent LAT: %f", RAD2DEG*atan(lat_num/lat_denum));
+//  ROS_INFO("Vincent LAT: %f", RAD2DEG*atan(lat_num/lat_denum));
   double lambda = atan((s_sigma*s_alpha_1)/(c_U_1_*c_sigma - s_U_1_*s_sigma*c_alpha_1));    //12
   double C = f_/16*cc_alpha*(4+f_*(4-3*cc_alpha));    //13
   double L = lambda - (1-C)*f_*s_alpha*(sigma + C*s_sigma*(c_sigma_m + C*c_sigma*(-1+2*cc_sigma_m))); //14
-  ROS_INFO("Vincent LON: %f", RAD2DEG*L + oLon_);
+//  ROS_INFO("Vincent LON: %f", RAD2DEG*L + oLon_);
   lon = RAD2DEG*L + oLon_;    //15
 
 //  double alpha_2 = atan(s_alpha/(-s_U_1_*s_sigma + c_U_1_*c_sigma*c_alpha_1)); ??
