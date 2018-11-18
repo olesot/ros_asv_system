@@ -87,6 +87,7 @@ void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles, nav
 	local_map_.data.resize(local_map_.info.width*local_map_.info.height);
 	ros::NodeHandle n;
 	lm_pub = n.advertise<nav_msgs::OccupancyGrid>("localmap", 5);
+        map_cli = n.serviceClient<asv_msgs::Intersect>("intersect_map");
 	obstacles_ = obstacles;
 	map_ = map;
 	
@@ -173,6 +174,7 @@ double simulationBasedMpc::costFnc(double P_ca, double Chi_ca, int k)
 	double H0 = 0;
 	double H1 = 0;
 	double H2 = 0;
+        double H3 = 0;
 	double cost = 0;
 	double t = 0;
 	double t0 = 0;
@@ -271,10 +273,21 @@ double simulationBasedMpc::costFnc(double P_ca, double Chi_ca, int k)
 		if (H0 > H1){
 			H1 = H0;  // Maximizing the cost with regards to time
 		}
+                // CALL INTERSECT SERVICE HERE
+                // STORE TO H3 IF NEW VAL IS HIGHER
+                map_srv.request.pos.x = asv->x(k);
+                map_srv.request.pos.y = asv->y(k);
+                if(!map_cli.call(map_srv))
+                {
+                        ROS_ERROR("Error calling intersect service");
+                }
+                if(map_srv.response.intersects){
+                        H3 = 100;
+                }
 	}
 
 	H2 = K_P_*(1-P_ca) + K_CHI_*pow(Chi_ca,2) + Delta_P(P_ca) + Delta_Chi(Chi_ca);
-	cost =  H1 + H2;
+	cost =  H1 + H2 + H3;
 
 	// Print H1 and H2 for P==X
 //	ROS_DEBUG_COND_NAMED(P_ca == 0.5,"Testing","Chi: %0.0f   \tP: %0.1f  \tH1: %0.2f  \tH2: %0.2f  \tcost: %0.2f", Chi_ca*RAD2DEG, P_ca, H1, H2, cost);

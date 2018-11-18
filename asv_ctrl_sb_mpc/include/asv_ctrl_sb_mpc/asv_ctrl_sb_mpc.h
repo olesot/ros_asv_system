@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 
 #include "asv_msgs/State.h"
+#include "asv_msgs/Intersect.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
 #include "visualization_msgs/Marker.h"
@@ -61,6 +62,8 @@ class simulationBasedMpc
 		nav_msgs::OccupancyGrid *map_;
 		nav_msgs::OccupancyGrid local_map_;
 		ros::Publisher lm_pub;
+                ros::ServiceClient map_cli;
+                asv_msgs::Intersect map_srv;
 
 		double Chi_ca_last_;
 		double P_ca_last_;
