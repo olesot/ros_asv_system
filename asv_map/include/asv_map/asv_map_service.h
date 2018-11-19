@@ -29,6 +29,7 @@ class MapService : public Vincent
 
     std::string path_;
     OGRLayer *layer_;
+    OGRFeature *feat_;
     OGREnvelope extnt_;
     OGRSpatialReference *spRef_;
     OGRPoint *point_;

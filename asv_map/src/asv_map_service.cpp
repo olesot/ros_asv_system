@@ -47,28 +47,23 @@ bool MapService::intersects(asv_msgs::Intersect::Request &req,
   double distance = sqrt(x*x + y*y);
   // ENU TO NED swap x y
   double azimuth = atan2(x, y);
-  //ROS_INFO("dist: %f, az: %f", distance, azimuth);
   double lat,lon;
-  lat = req.pos.x;
-  lon = req.pos.y;
-//  direct(azimuth, distance, lat, lon);
- // ROS_INFO("Lat: %.9f, Lon: %.9f", lat, lon);
+  direct(azimuth, distance, lat, lon);
+
   point_->setX(lon);
   point_->setY(lat);
 
-  OGRFeature *feat;
   layer_->ResetReading();
-  while((feat = layer_->GetNextFeature()) != NULL)
+  while((feat_ = layer_->GetNextFeature()) != NULL)
   {
-    OGRGeometry *geom = feat->GetGeometryRef();
+    OGRGeometry *geom = feat_->GetGeometryRef();
     if(point_->Intersects(geom))
     {
-  //    ROS_INFO("InterSects at (%f, %f)!", point_->getX(), point_->getY());
       res.intersects = true;
       return true;
     }
+    OGRFeature::DestroyFeature(feat_);
   }
-//  ROS_INFO("Do not intersect at (%f, %f)!", point_->getX(), point_->getY());
   res.intersects = false;
   return true;
 }
