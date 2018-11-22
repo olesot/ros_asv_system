@@ -16,6 +16,7 @@
 #include "asv_ctrl_sb_mpc/obstacle.h"
 #include "asv_ctrl_sb_mpc/asv_ctrl_sb_mpc.h"
 
+#include <ros/package.h>
 
 const float PI = M_PI;//3.1415927;
 static const double DEG2RAD = PI/180.0f;
@@ -59,6 +60,22 @@ void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles, nav
 		ros::console::notifyLoggerLevelsChanged();
 	}
 	
+        path_ = ros::package::getPath("asv_map");
+        path_.append("/config/maps/polyHazardDissolved.shp");
+        GDALAllRegister();
+        GDALDataset *ds;
+        ROS_INFO("Trying to open %s", path_.c_str());
+        ds = (GDALDataset*) GDALOpenEx(path_.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL);
+        if(ds == NULL)
+        {
+                ROS_ERROR("Open Map Failed.");
+                ros::shutdown();
+        }
+        layer_ = ds->GetLayer(0);
+        feat_ = layer_->GetFeature(0);
+        spRef_ = layer_->GetSpatialRef();
+        geom_ = feat_->GetGeometryRef();
+
 	Chi_ca_last_ = 0;   	// Keep nominal course
 	P_ca_last_ = 1;		    // Keep nominal speed
 	
@@ -74,7 +91,7 @@ void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles, nav
 //	double speedOffsets[] = {-1,-0.5,0,0.5,0.75,1};
 	P_ca_.assign(speedOffsets, speedOffsets + sizeof(speedOffsets)/sizeof(speedOffsets[0]));
 
-	asv = new shipModel(T_,DT_);
+	asv = new shipModel(T_,DT_, spRef_);
 
 	/// @todo Remove local_map_! Only used for debugging purposes...
 	local_map_.header.frame_id ="map";
@@ -90,7 +107,9 @@ void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles, nav
         map_cli = n.serviceClient<asv_msgs::Intersect>("intersect_map");
 	obstacles_ = obstacles;
 	map_ = map;
-	
+
+
+
 	ROS_INFO("Initialization complete");
 }
 
@@ -135,6 +154,14 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 		for (int j = 0; j < P_ca_.size(); j++){
 
 			asv->linearPrediction(asv_pose_, asv_twist_, u_d_*P_ca_[j], psi_d_+ Chi_ca_[i]);
+                        bool intersecting = geom_->Intersects(asv->line_);
+                        if(geom_->Intersects(asv->line_))
+                        {
+                                  ROS_INFO("INTERSECTS with CHI: %f, P: %f.", Chi_ca_[i], P_ca_[j]);
+                        }else
+                        {
+                                  ROS_INFO("DO NOT INTERSECT");
+                        }
 
 			cost_i = -1;
 			for (int k = 0; k < obstacles_vect.size(); k++){
@@ -275,6 +302,7 @@ double simulationBasedMpc::costFnc(double P_ca, double Chi_ca, int k)
 		}
                 // CALL INTERSECT SERVICE HERE
                 // STORE TO H3 IF NEW VAL IS HIGHER
+                /*
                 map_srv.request.pos.x = asv->x(k);
                 map_srv.request.pos.y = asv->y(k);
                 if(!map_cli.call(map_srv))
@@ -283,7 +311,7 @@ double simulationBasedMpc::costFnc(double P_ca, double Chi_ca, int k)
                 }
                 if(map_srv.response.intersects){
                         H3 = 100;
-                }
+                }*/
 	}
 
 	H2 = K_P_*(1-P_ca) + K_CHI_*pow(Chi_ca,2) + Delta_P(P_ca) + Delta_Chi(Chi_ca);

@@ -4,6 +4,11 @@ project(asv_ctrl_sb_mpc)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+
+find_library(gdal_LIBRARIES
+  gdal
+)
+
 find_package(catkin REQUIRED COMPONENTS
   asv_msgs
   asv_simulator
@@ -12,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   roscpp
   rospy
+  roslib
   std_msgs
 )
 
@@ -148,7 +154,7 @@ add_dependencies(asv_ctrl_sb_mpc_node
   ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(asv_ctrl_sb_mpc_node ${catkin_LIBRARIES})
+target_link_libraries(asv_ctrl_sb_mpc_node ${catkin_LIBRARIES} ${gdal_LIBRARIES})
 target_link_libraries(asv_ctrl_sb_mpc obstacle)
 target_link_libraries(asv_ctrl_sb_mpc shipModel)
 

@@ -4,12 +4,14 @@
 #include <vector>
 #include <Eigen/Dense>
 
+#include <gdal/ogrsf_frmts.h>
+
 class shipModel
 {
 	public:
 	
 	/// Constructor
-	shipModel(double T, double dt);
+	shipModel(double T, double dt, OGRSpatialReference *spRef);
 	
 	/// Destructor
 	~shipModel();
@@ -30,8 +32,11 @@ class shipModel
 	double getL();
 	double getW();
 
+        OGRLineString *line_;
+        OGRLineString *testLine_;
+
 	private:
-	
+
 	void calculate_position_offsets();
 
 	void updateCtrlInput(double u_d, double psi_d, int i);
