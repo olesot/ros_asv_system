@@ -165,7 +165,7 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 				}
 			}
 
-                        if(geom_->Intersects(asv->line_)
+                        if(geom_->Intersects(asv->line_))
                         {
                                 cost_i += 100;
                         }
