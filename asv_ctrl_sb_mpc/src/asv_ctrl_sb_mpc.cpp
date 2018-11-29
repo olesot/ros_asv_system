@@ -16,6 +16,7 @@
 #include "asv_ctrl_sb_mpc/obstacle.h"
 #include "asv_ctrl_sb_mpc/asv_ctrl_sb_mpc.h"
 
+#include <ros/package.h>
 
 const float PI = M_PI;//3.1415927;
 static const double DEG2RAD = PI/180.0f;
@@ -54,14 +55,30 @@ simulationBasedMpc::~simulationBasedMpc()
 void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles, nav_msgs::OccupancyGrid *map)
 {
 	ROS_INFO("Initializing sb-mpc node...");
-	
+
 	if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
 		ros::console::notifyLoggerLevelsChanged();
 	}
-	
+
+        path_ = ros::package::getPath("asv_map");
+        path_.append("/config/maps/clip.shp");
+        GDALAllRegister();
+        GDALDataset *ds;
+        ROS_INFO("Trying to open %s", path_.c_str());
+        ds = (GDALDataset*) GDALOpenEx(path_.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL);
+        if(ds == NULL)
+        {
+                ROS_ERROR("Open Map Failed.");
+                ros::shutdown();
+        }
+        layer_ = ds->GetLayer(0);
+        feat_ = layer_->GetFeature(0);
+        spRef_ = layer_->GetSpatialRef();
+        geom_ = feat_->GetGeometryRef();
+
 	Chi_ca_last_ = 0;   	// Keep nominal course
 	P_ca_last_ = 1;		    // Keep nominal speed
-	
+
     double courseOffsets[] = {-90.0,-75.0,-60.0,-45.0,-30.0,-15.0,0.0,15.0,30.0,45.0,60.0,75.0,90.0};
 //	double courseOffsets[] = {-90.,-80.,-70.,-60.,-50.,-40.,-30.,-20.,-10.,0.,10.,20.,30.,40.,50.,60.,70.,80.,90};
 //	double courseOffsets[] = {-90.,-85.,-80.,-75.,-70.,-65.,-60.,-55.,-50.,-45.,-40.,-35.,-30.,-25.,-20.,-15.,-10.,-5.,0.,5.,10.,15.,20.,25.,30.,35.,40.,45.,50.,55.,60.,65.,70.,75.,80.,85.,90};
@@ -74,7 +91,7 @@ void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles, nav
 //	double speedOffsets[] = {-1,-0.5,0,0.5,0.75,1};
 	P_ca_.assign(speedOffsets, speedOffsets + sizeof(speedOffsets)/sizeof(speedOffsets[0]));
 
-	asv = new shipModel(T_,DT_);
+	asv = new shipModel(T_,DT_, spRef_);
 
 	/// @todo Remove local_map_! Only used for debugging purposes...
 	local_map_.header.frame_id ="map";
@@ -90,7 +107,9 @@ void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles, nav
         map_cli = n.serviceClient<asv_msgs::Intersect>("intersect_map");
 	obstacles_ = obstacles;
 	map_ = map;
-	
+
+
+
 	ROS_INFO("Initialization complete");
 }
 
@@ -116,11 +135,12 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 	double cost_i = 0;
 	double cost_k;
 	std::vector<asv_msgs::State>::iterator it; // Obstacles iterator
-	
+
 	for (it = obstacles_->begin(); it != obstacles_->end(); ++it){
 		obstacle *obst = new obstacle(it->x,it->y,it->u,it->v, it->psi, it->header.radius, T_, DT_);
 		obstacles_vect.push_back(obst);
 	}
+
 
 	if (obstacles_vect.size() == 0){
 		u_d_best = 1;
@@ -129,7 +149,7 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 		Chi_ca_last_ = 0;
 		return;
 	}
-	
+
 
 	for (int i = 0; i < Chi_ca_.size(); i++){
 		for (int j = 0; j < P_ca_.size(); j++){
@@ -145,14 +165,19 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 				}
 			}
 
-			if (cost_i < cost){
+                        if(geom_->Intersects(asv->line_)
+                        {
+                                cost_i += 100;
+                        }
+
+                        if (cost_i < cost){
 				cost = cost_i; 			// Minimizing the overall cost
 				u_d_best = P_ca_[j];
 				psi_d_best = Chi_ca_[i];
 			}
 		}
 	}
-	
+
 	for (int k = 0; k < obstacles_vect.size(); k++){
 		delete(obstacles_vect[k]);
 	}
@@ -160,12 +185,12 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 
 	P_ca_last_ = u_d_best;
 	Chi_ca_last_ = psi_d_best;
-	
+
 	ROS_INFO("u_os: %0.2f      psi_os: %0.2f    cost: %0.2f", u_d_best, psi_d_best*RAD2DEG, cost);
 };
 
 double simulationBasedMpc::costFnc(double P_ca, double Chi_ca, int k)
-{ 
+{
 	double dist, phi, psi_o, phi_o, psi_rel, R, C, k_coll, d_safe_i;
 	Eigen::Vector2d d, los, los_inv, v_o, v_s;
 	bool mu, OT, SB, HO, CR;
@@ -182,7 +207,7 @@ double simulationBasedMpc::costFnc(double P_ca, double Chi_ca, int k)
 	for (int i = 0; i < n_samp-1; i++){
 
 		t += DT_;
-		
+
 		d(0) = obstacles_vect[k]->x_[i] - asv->x[i];
 		d(1) = obstacles_vect[k]->y_[i] - asv->y[i];
 		dist = d.norm();
@@ -275,6 +300,7 @@ double simulationBasedMpc::costFnc(double P_ca, double Chi_ca, int k)
 		}
                 // CALL INTERSECT SERVICE HERE
                 // STORE TO H3 IF NEW VAL IS HIGHER
+                /*
                 map_srv.request.pos.x = asv->x(k);
                 map_srv.request.pos.y = asv->y(k);
                 if(!map_cli.call(map_srv))
@@ -283,7 +309,7 @@ double simulationBasedMpc::costFnc(double P_ca, double Chi_ca, int k)
                 }
                 if(map_srv.response.intersects){
                         H3 = 100;
-                }
+                }*/
 	}
 
 	H2 = K_P_*(1-P_ca) + K_CHI_*pow(Chi_ca,2) + Delta_P(P_ca) + Delta_Chi(Chi_ca);
@@ -303,7 +329,7 @@ double simulationBasedMpc::costFnc(double P_ca, double Chi_ca, int k)
 }
 
 double simulationBasedMpc::Delta_P(double P_ca){
-	
+
 	return K_DP_*std::abs(P_ca_last_ - P_ca);		// 0.5
 }
 

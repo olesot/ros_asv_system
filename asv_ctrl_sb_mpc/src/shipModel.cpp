@@ -1,3 +1,4 @@
+#include <ros/ros.h>
 #include <ros/console.h>
 
 #include "asv_ctrl_sb_mpc/shipModel.h"
@@ -11,13 +12,19 @@ const float PI = 3.1415927;
 static const double DEG2RAD = PI/180.0f;
 static const double RAD2DEG = 180.0f/PI;
 
+// APPROXIMATION FOR A LOCAL REGION
+static const double Y2LAT = 1/111386.1;
+static const double X2LON = 1/58347.8;
+static const double XORIGIN = 5.84;
+static const double YORIGIN = 58.475;
+
 /// Assures that the numerical difference is at most PI
 double normalize_angle_diff(double angle, double angle_ref);
 
 /// Assures that angle is between [-PI, PI)
 double normalize_angle(double angle);
 
-shipModel::shipModel(double T, double dt)
+shipModel::shipModel(double T, double dt, OGRSpatialReference *spRef)
 {	
 	T_ = T;
 	DT_ = dt;
@@ -86,6 +93,18 @@ shipModel::shipModel(double T, double dt)
 	Kd_psi = 1.0;
 	Kp_r = 8.0;
 
+
+
+        line_ = new OGRLineString();
+        line_->assignSpatialReference(spRef);
+        // This line intersects source map
+        testLine_ = new OGRLineString();
+        testLine_->assignSpatialReference(spRef);
+        testLine_->addPoint(5.8222624, 58.4732253, 0);
+        testLine_->addPoint(5.8232624, 58.473462,0);
+        testLine_->addPoint(5.8232626, 58.473462,0);
+        testLine_->addPoint(5.8232629, 58.473462,0);
+        testLine_->addPoint(5.8232634, 58.473462,0);
 }
 
 shipModel::~shipModel(){
@@ -114,16 +133,20 @@ void shipModel::linearPrediction(Eigen::Vector3d asv_pose, Eigen::Vector3d asv_t
 	r12 = -sin(psi_d);
 	r21 = sin(psi_d);
 	r22 = cos(psi_d);
-
+        delete line_;
+        line_ = new OGRLineString();
 	for (int i = 0; i < n_samp-1; i++){
 
 		x(i+1) = x(i) + DT_*(r11*u(i) + r12*v(i));
 		y(i+1) = y(i) + DT_*(r21*u(i) + r22*v(i));
+                // ASSIGN NEW POINT TO LINE HERE
+                line_->addPoint(X2LON*x(i+1) + XORIGIN, Y2LAT*y(i+1) + YORIGIN, 0);
 		psi(i+1) = psi_d;
 		u(i+1) = u_d;
 		v(i+1) = 0;
 
 	}
+        ROS_INFO("Start: (%f, %f)    end: (%f, %f)", line_->getX(0), line_->getY(0), line_->getX(598), line_->getY(598));
 }
 
 

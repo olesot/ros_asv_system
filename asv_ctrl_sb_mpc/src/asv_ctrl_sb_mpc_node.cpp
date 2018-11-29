@@ -104,7 +104,7 @@ void simulationBasedMpcNode::start()
 			os_.P_ca = u_os_;
 			os_.Chi_ca = psi_os_;
 			os_pub_->publish(os_);
-			//ROS_INFO("Runtime: %0.2f", ((float)tock)/CLOCKS_PER_SEC);
+			ROS_INFO("Runtime: %0.2f", ((float)tock)/CLOCKS_PER_SEC);
 		}
 		t += 1/rate;
 

@@ -52,7 +52,12 @@ class simulationBasedMpc
 		
 		
 		private:
-				
+                std::string path_;
+                OGRLayer *layer_;
+                OGRFeature *feat_;
+                OGRGeometry *geom_;
+                OGRSpatialReference *spRef_;
+
 		Eigen::Vector3d asv_pose_;
 		Eigen::Vector3d asv_twist_;
 		double u_d_;
