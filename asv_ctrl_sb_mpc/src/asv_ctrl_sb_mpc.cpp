@@ -55,13 +55,13 @@ simulationBasedMpc::~simulationBasedMpc()
 void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles, nav_msgs::OccupancyGrid *map)
 {
 	ROS_INFO("Initializing sb-mpc node...");
-	
+
 	if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
 		ros::console::notifyLoggerLevelsChanged();
 	}
-	
+
         path_ = ros::package::getPath("asv_map");
-        path_.append("/config/maps/polyHazardDissolved.shp");
+        path_.append("/config/maps/clip.shp");
         GDALAllRegister();
         GDALDataset *ds;
         ROS_INFO("Trying to open %s", path_.c_str());
@@ -78,7 +78,7 @@ void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles, nav
 
 	Chi_ca_last_ = 0;   	// Keep nominal course
 	P_ca_last_ = 1;		    // Keep nominal speed
-	
+
     double courseOffsets[] = {-90.0,-75.0,-60.0,-45.0,-30.0,-15.0,0.0,15.0,30.0,45.0,60.0,75.0,90.0};
 //	double courseOffsets[] = {-90.,-80.,-70.,-60.,-50.,-40.,-30.,-20.,-10.,0.,10.,20.,30.,40.,50.,60.,70.,80.,90};
 //	double courseOffsets[] = {-90.,-85.,-80.,-75.,-70.,-65.,-60.,-55.,-50.,-45.,-40.,-35.,-30.,-25.,-20.,-15.,-10.,-5.,0.,5.,10.,15.,20.,25.,30.,35.,40.,45.,50.,55.,60.,65.,70.,75.,80.,85.,90};
@@ -135,11 +135,12 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 	double cost_i = 0;
 	double cost_k;
 	std::vector<asv_msgs::State>::iterator it; // Obstacles iterator
-	
+
 	for (it = obstacles_->begin(); it != obstacles_->end(); ++it){
 		obstacle *obst = new obstacle(it->x,it->y,it->u,it->v, it->psi, it->header.radius, T_, DT_);
 		obstacles_vect.push_back(obst);
 	}
+
 
 	if (obstacles_vect.size() == 0){
 		u_d_best = 1;
@@ -148,20 +149,12 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 		Chi_ca_last_ = 0;
 		return;
 	}
-	
+
 
 	for (int i = 0; i < Chi_ca_.size(); i++){
 		for (int j = 0; j < P_ca_.size(); j++){
 
 			asv->linearPrediction(asv_pose_, asv_twist_, u_d_*P_ca_[j], psi_d_+ Chi_ca_[i]);
-                        bool intersecting = geom_->Intersects(asv->line_);
-                        if(geom_->Intersects(asv->line_))
-                        {
-                                  ROS_INFO("INTERSECTS with CHI: %f, P: %f.", Chi_ca_[i], P_ca_[j]);
-                        }else
-                        {
-                                  ROS_INFO("DO NOT INTERSECT");
-                        }
 
 			cost_i = -1;
 			for (int k = 0; k < obstacles_vect.size(); k++){
@@ -172,14 +165,19 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 				}
 			}
 
-			if (cost_i < cost){
+                        if(geom_->Intersects(asv->line_)
+                        {
+                                cost_i += 100;
+                        }
+
+                        if (cost_i < cost){
 				cost = cost_i; 			// Minimizing the overall cost
 				u_d_best = P_ca_[j];
 				psi_d_best = Chi_ca_[i];
 			}
 		}
 	}
-	
+
 	for (int k = 0; k < obstacles_vect.size(); k++){
 		delete(obstacles_vect[k]);
 	}
@@ -187,12 +185,12 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 
 	P_ca_last_ = u_d_best;
 	Chi_ca_last_ = psi_d_best;
-	
+
 	ROS_INFO("u_os: %0.2f      psi_os: %0.2f    cost: %0.2f", u_d_best, psi_d_best*RAD2DEG, cost);
 };
 
 double simulationBasedMpc::costFnc(double P_ca, double Chi_ca, int k)
-{ 
+{
 	double dist, phi, psi_o, phi_o, psi_rel, R, C, k_coll, d_safe_i;
 	Eigen::Vector2d d, los, los_inv, v_o, v_s;
 	bool mu, OT, SB, HO, CR;
@@ -209,7 +207,7 @@ double simulationBasedMpc::costFnc(double P_ca, double Chi_ca, int k)
 	for (int i = 0; i < n_samp-1; i++){
 
 		t += DT_;
-		
+
 		d(0) = obstacles_vect[k]->x_[i] - asv->x[i];
 		d(1) = obstacles_vect[k]->y_[i] - asv->y[i];
 		dist = d.norm();
@@ -331,7 +329,7 @@ double simulationBasedMpc::costFnc(double P_ca, double Chi_ca, int k)
 }
 
 double simulationBasedMpc::Delta_P(double P_ca){
-	
+
 	return K_DP_*std::abs(P_ca_last_ - P_ca);		// 0.5
 }
 
