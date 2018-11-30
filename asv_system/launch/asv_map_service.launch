@@ -39,6 +39,6 @@
   <node pkg="rviz"
         type="rviz"
         name="rviz"
-        args="-d $(find asv_simulator)/config/rviz/two_vessels.rviz" />
+        args="-d $(find asv_simulator)/config/rviz/show_track.rviz" />
 
 </launch>
