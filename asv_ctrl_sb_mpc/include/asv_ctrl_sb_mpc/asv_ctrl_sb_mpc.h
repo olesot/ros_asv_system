@@ -10,6 +10,7 @@
 #include "visualization_msgs/Marker.h"
 #include "asv_ctrl_sb_mpc/obstacle.h"
 #include "asv_ctrl_sb_mpc/shipModel.h"
+#include "asv_ctrl_sb_mpc/hazardMap.h"
 
 class simulationBasedMpc
 {
@@ -74,6 +75,8 @@ class simulationBasedMpc
 		std::vector<double> P_ca_;
 		
 		std::vector<obstacle*> obstacles_vect;
+
+                HazardMap *map_;
 
 		shipModel *asv;
 		double costFnc(double P_ca, double Chi_ca, int k);

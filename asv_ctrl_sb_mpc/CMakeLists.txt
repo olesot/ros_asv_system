@@ -138,6 +138,7 @@ include_directories(
 add_library(asv_ctrl_sb_mpc src/asv_ctrl_sb_mpc.cpp)
 add_library(obstacle src/obstacle.cpp)
 add_library(shipModel src/shipModel.cpp)
+add_library(hazardMap src/hazardMap.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -145,7 +146,7 @@ add_library(shipModel src/shipModel.cpp)
 # add_dependencies(asv_ctrl_sb_mpc ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(asv_ctrl_sb_mpc_node src/asv_ctrl_sb_mpc_node.cpp src/asv_ctrl_sb_mpc.cpp src/obstacle.cpp src/shipModel.cpp)
+add_executable(asv_ctrl_sb_mpc_node src/asv_ctrl_sb_mpc_node.cpp src/asv_ctrl_sb_mpc.cpp src/obstacle.cpp src/shipModel.cpp src/hazardMap.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -157,6 +158,7 @@ add_dependencies(asv_ctrl_sb_mpc_node
 target_link_libraries(asv_ctrl_sb_mpc_node ${catkin_LIBRARIES} ${gdal_LIBRARIES})
 target_link_libraries(asv_ctrl_sb_mpc obstacle)
 target_link_libraries(asv_ctrl_sb_mpc shipModel)
+target_link_libraries(asv_ctrl_sb_mpc hazardMap)
 
 #############
 ## Install ##

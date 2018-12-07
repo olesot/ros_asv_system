@@ -91,6 +91,8 @@ void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles)
 //	double speedOffsets[] = {-1,-0.5,0,0.5,0.75,1};
 	P_ca_.assign(speedOffsets, speedOffsets + sizeof(speedOffsets)/sizeof(speedOffsets[0]));
 
+        map_ = new HazardMap();
+
 	asv = new shipModel(T_,DT_, spRef_);
 	obstacles_ = obstacles;
 
