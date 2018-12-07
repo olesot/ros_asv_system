@@ -1,2 +1,4 @@
 *.swp
 *.pyc
+
+asv_ctrl_sb_mpc/config/maps/shp/
