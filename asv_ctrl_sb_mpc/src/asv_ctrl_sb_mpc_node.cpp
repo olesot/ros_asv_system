@@ -32,11 +32,6 @@ int main(int argc, char *argv[])
 											   &simulationBasedMpcNode::obstacleCallback,
 											   &sb_mpc_node);
 											   
-	ros::Subscriber og_sub = n.subscribe("/map",
-										 1,
-										 &simulationBasedMpcNode::mapCallback,
-										 &sb_mpc_node);
-    
     ros::Subscriber asv_sub	= n.subscribe("asv/state",
 										  1,
 										  &simulationBasedMpcNode::asvCallback,
@@ -47,7 +42,7 @@ int main(int argc, char *argv[])
 										 &simulationBasedMpcNode::cmdCallback,
 										 &sb_mpc_node);
 	
-	sb_mpc_node.initialize(&cmd_pub, & os_pub, &obstacle_sub, &og_sub, &asv_sub, &cmd_sub, sb_mpc);
+	sb_mpc_node.initialize(&cmd_pub, & os_pub, &obstacle_sub, &asv_sub, &cmd_sub, sb_mpc);
 	sb_mpc_node.start();
 	
 	ros::shutdown();
@@ -58,7 +53,6 @@ simulationBasedMpcNode::simulationBasedMpcNode() : sb_mpc_(NULL),
 												   cmd_pub_(NULL),
 												   os_pub_(NULL),
 												   obstacle_sub_(NULL),
-												   og_sub_(NULL),
 												   asv_sub_(NULL),
 												   cmd_sub_(NULL) {};
 
@@ -67,7 +61,6 @@ simulationBasedMpcNode::~simulationBasedMpcNode() {};
 void simulationBasedMpcNode::initialize(ros::Publisher *cmd_pub,
 										ros::Publisher *os_pub,
 										ros::Subscriber *obstacle_sub,
-										ros::Subscriber *og_sub,
 										ros::Subscriber *asv_sub,
 										ros::Subscriber *cmd_sub,
 										simulationBasedMpc *sb_mpc)
@@ -75,7 +68,6 @@ void simulationBasedMpcNode::initialize(ros::Publisher *cmd_pub,
 	cmd_pub_ = cmd_pub;
 	os_pub_ = os_pub;
 	obstacle_sub_ = obstacle_sub;
-	og_sub_ = og_sub;
 	asv_sub_ = asv_sub;
 	cmd_sub_ = cmd_sub;
 	
@@ -83,7 +75,7 @@ void simulationBasedMpcNode::initialize(ros::Publisher *cmd_pub,
 	u_os_ = 1;
 	psi_os_ = 0;
 	
-	sb_mpc_->initialize(&obstacles_, &map_);
+	sb_mpc_->initialize(&obstacles_);
 }										
 
 void simulationBasedMpcNode::start()
@@ -133,21 +125,3 @@ void simulationBasedMpcNode::cmdCallback(const geometry_msgs::Twist::ConstPtr &m
 	psi_d_ = msg->angular.y;
 }
 
-void::simulationBasedMpcNode::mapCallback(const nav_msgs::OccupancyGrid::ConstPtr &msg)
-{
-  // Copy what we need
-  map_.info.resolution = msg->info.resolution;
-  map_.info.height = msg->info.height;
-  map_.info.width = msg->info.width;
-  map_.info.origin.position.x = msg->info.origin.position.x;
-  map_.info.origin.position.y = msg->info.origin.position.y;
-
-  ROS_INFO("r %f, h %d, w%d, px %f, py %f",
-           map_.info.resolution,
-           map_.info.height,
-           map_.info.width,
-           map_.info.origin.position.x,
-           map_.info.origin.position.y);
-
-  map_.data = msg->data;
-}

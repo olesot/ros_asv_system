@@ -28,7 +28,7 @@ class simulationBasedMpc
 		* wrapper (by subscribing to an obstacle tracker node).
 		* @param map A pointer to the occupancy grid published by the map_server.
 		*/
-		void initialize(std::vector<asv_msgs::State> *obstacles, nav_msgs::OccupancyGrid *map);
+		void initialize(std::vector<asv_msgs::State> *obstacles);
 		
 		/**
 		* @brief Callback for updating the internal ASV state (data provided by ROS wrapper).
@@ -64,11 +64,8 @@ class simulationBasedMpc
 		double psi_d_;
 				
 		std::vector<asv_msgs::State> *obstacles_;
-		nav_msgs::OccupancyGrid *map_;
-		nav_msgs::OccupancyGrid local_map_;
+
 		ros::Publisher lm_pub;
-                ros::ServiceClient map_cli;
-                asv_msgs::Intersect map_srv;
 
 		double Chi_ca_last_;
 		double P_ca_last_;

@@ -52,7 +52,7 @@ simulationBasedMpc::~simulationBasedMpc()
 {
 };
 
-void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles, nav_msgs::OccupancyGrid *map)
+void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles)
 {
 	ROS_INFO("Initializing sb-mpc node...");
 
@@ -92,23 +92,7 @@ void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles, nav
 	P_ca_.assign(speedOffsets, speedOffsets + sizeof(speedOffsets)/sizeof(speedOffsets[0]));
 
 	asv = new shipModel(T_,DT_, spRef_);
-
-	/// @todo Remove local_map_! Only used for debugging purposes...
-	local_map_.header.frame_id ="map";
-	local_map_.info.resolution = 0.78;
-	local_map_.info.width  = 1362;
-	local_map_.info.height = 942;
-	local_map_.info.origin.position.x = -(float)496;
-	local_map_.info.origin.position.y = -(float)560;
-
-	local_map_.data.resize(local_map_.info.width*local_map_.info.height);
-	ros::NodeHandle n;
-	lm_pub = n.advertise<nav_msgs::OccupancyGrid>("localmap", 5);
-        map_cli = n.serviceClient<asv_msgs::Intersect>("intersect_map");
 	obstacles_ = obstacles;
-	map_ = map;
-
-
 
 	ROS_INFO("Initialization complete");
 }

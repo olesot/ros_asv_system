@@ -21,7 +21,6 @@ class simulationBasedMpcNode
 	 * @param cmd_pub
 	 * @param mk_pub
 	 * @param obstacle_sub
-	 * @param og_sub
 	 * @param asv_sub
 	 * @param cmd_sub
 	 * @param vo
@@ -29,7 +28,6 @@ class simulationBasedMpcNode
 	void initialize(ros::Publisher *cmd_pub,
 					ros::Publisher *os_pub,
 					ros::Subscriber *obstacle_sub,
-					ros::Subscriber *og_sub,
 					ros::Subscriber *asv_sub,
 					ros::Subscriber *cmd_sub,
 					simulationBasedMpc *sb_mpc);
@@ -42,7 +40,6 @@ class simulationBasedMpcNode
 	void asvCallback(const nav_msgs::Odometry::ConstPtr &msg);
 	void obstacleCallback(const asv_msgs::StateArray::ConstPtr &msg);
 	void cmdCallback(const geometry_msgs::Twist::ConstPtr &msg);
-	void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr &msg);
 	
 	private:
 	
@@ -51,7 +48,6 @@ class simulationBasedMpcNode
 	
 	simulationBasedMpc *sb_mpc_;
 	
-	nav_msgs::OccupancyGrid map_;
 	std::vector<asv_msgs::State> obstacles_;
 	Eigen::Vector3d asv_pose_;
 	Eigen::Vector3d asv_twist_;
@@ -67,7 +63,6 @@ class simulationBasedMpcNode
 	ros::Publisher *os_pub_;
 	
 	ros::Subscriber *obstacle_sub_;
-	ros::Subscriber *og_sub_;
 	ros::Subscriber *asv_sub_;
 	ros::Subscriber *cmd_sub_;
 };
