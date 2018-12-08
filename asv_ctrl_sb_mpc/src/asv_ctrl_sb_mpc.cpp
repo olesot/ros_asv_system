@@ -60,22 +60,6 @@ void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles)
 		ros::console::notifyLoggerLevelsChanged();
 	}
 
-        path_ = ros::package::getPath("asv_map");
-        path_.append("/config/maps/clip.shp");
-        GDALAllRegister();
-        GDALDataset *ds;
-        ROS_INFO("Trying to open %s", path_.c_str());
-        ds = (GDALDataset*) GDALOpenEx(path_.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL);
-        if(ds == NULL)
-        {
-                ROS_ERROR("Open Map Failed.");
-                ros::shutdown();
-        }
-        layer_ = ds->GetLayer(0);
-        feat_ = layer_->GetFeature(0);
-        spRef_ = layer_->GetSpatialRef();
-        geom_ = feat_->GetGeometryRef();
-
 	Chi_ca_last_ = 0;   	// Keep nominal course
 	P_ca_last_ = 1;		    // Keep nominal speed
 
@@ -91,9 +75,9 @@ void simulationBasedMpc::initialize(std::vector<asv_msgs::State> *obstacles)
 //	double speedOffsets[] = {-1,-0.5,0,0.5,0.75,1};
 	P_ca_.assign(speedOffsets, speedOffsets + sizeof(speedOffsets)/sizeof(speedOffsets[0]));
 
-        map_ = new HazardMap();
+        map_ = new HazardMap(T_, DT_);
 
-	asv = new shipModel(T_,DT_, spRef_);
+	asv = new shipModel(T_,DT_, map_->getSRS());
 	obstacles_ = obstacles;
 
 	ROS_INFO("Initialization complete");
@@ -136,6 +120,8 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 		return;
 	}
 
+        // UPDATE MAP POSITION HERE!
+        map_->updateMap(asv_pose_[0], asv_pose_[1]);
 
 	for (int i = 0; i < Chi_ca_.size(); i++){
 		for (int j = 0; j < P_ca_.size(); j++){
@@ -150,12 +136,16 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 					cost_i = cost_k;	// Maximizing cost associated with this scenario
 				}
 			}
-
+                        // CALCULATE POSITION HERE!
+                        double ag_cost = map_->ag_cost(asv->safe_, asv->close_, asv->ahead_);
+                        ROS_INFO("AG_cost: %f", ag_cost);
+                        cost_i += ag_cost;
+                        /*
                         if(geom_->Intersects(asv->line_))
                         {
                                 cost_i += 100;
                         }
-
+*/
                         if (cost_i < cost){
 				cost = cost_i; 			// Minimizing the overall cost
 				u_d_best = P_ca_[j];

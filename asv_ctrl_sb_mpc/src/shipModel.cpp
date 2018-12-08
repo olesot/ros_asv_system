@@ -96,7 +96,13 @@ shipModel::shipModel(double T, double dt, OGRSpatialReference *spRef)
 
 
         line_ = new OGRLineString();
+        safe_ = new OGRLineString();
+        close_ = new OGRLineString();
+        ahead_ = new OGRLineString();
         line_->assignSpatialReference(spRef);
+        safe_->assignSpatialReference(spRef);
+        close_->assignSpatialReference(spRef);
+        ahead_->assignSpatialReference(spRef);
         // This line intersects source map
         testLine_ = new OGRLineString();
         testLine_->assignSpatialReference(spRef);
@@ -133,20 +139,25 @@ void shipModel::linearPrediction(Eigen::Vector3d asv_pose, Eigen::Vector3d asv_t
 	r12 = -sin(psi_d);
 	r21 = sin(psi_d);
 	r22 = cos(psi_d);
-        delete line_;
-        line_ = new OGRLineString();
+        delete safe_, close_, ahead_;
+        safe_ = new OGRLineString();
+        close_ = new OGRLineString();
+        ahead_ = new OGRLineString();
 	for (int i = 0; i < n_samp-1; i++){
 
 		x(i+1) = x(i) + DT_*(r11*u(i) + r12*v(i));
 		y(i+1) = y(i) + DT_*(r21*u(i) + r22*v(i));
                 // ASSIGN NEW POINT TO LINE HERE
-                line_->addPoint(X2LON*x(i+1) + XORIGIN, Y2LAT*y(i+1) + YORIGIN, 0);
+                if(i < 10) safe_->addPoint(X2LON*x(i+1) + XORIGIN, Y2LAT*y(i+1) + YORIGIN);
+                else if(i < 30) close_->addPoint(X2LON*x(i+1) + XORIGIN, Y2LAT*y(i+1) + YORIGIN);
+                else ahead_->addPoint(X2LON*x(i+1) + XORIGIN, Y2LAT*y(i+1) + YORIGIN);
+//                line_->addPoint(X2LON*x(i+1) + XORIGIN, Y2LAT*y(i+1) + YORIGIN, 0);
 		psi(i+1) = psi_d;
 		u(i+1) = u_d;
 		v(i+1) = 0;
 
 	}
-        ROS_INFO("Start: (%f, %f)    end: (%f, %f)", line_->getX(0), line_->getY(0), line_->getX(598), line_->getY(598));
+        //ROS_INFO("Start: (%f, %f)    end: (%f, %f)", line_->getX(0), line_->getY(0), line_->getX(598), line_->getY(598));
 }
 
 

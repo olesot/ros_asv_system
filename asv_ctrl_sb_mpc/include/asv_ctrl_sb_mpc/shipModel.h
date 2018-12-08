@@ -33,6 +33,9 @@ class shipModel
 	double getW();
 
         OGRLineString *line_;
+        OGRLineString *safe_;
+        OGRLineString *close_;
+        OGRLineString *ahead_;
         OGRLineString *testLine_;
 
 	private:
