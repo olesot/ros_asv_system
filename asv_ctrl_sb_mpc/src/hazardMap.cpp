@@ -85,13 +85,13 @@ void HazardMap::updateMap(double x, double y)
   // Delete old features in clip and area
   OGRFeature *nxtFeat;
   clip_->ResetReading();
-  while(nxtFeat = clip_->GetNextFeature())
+  while((nxtFeat = clip_->GetNextFeature()) != NULL)
   {
     if(clip_->DeleteFeature(nxtFeat->GetFID()) != OGRERR_NONE)
       ROS_ERROR("Error deleting clip feature!");
   }
   area_->ResetReading();
-  while(nxtFeat = area_->GetNextFeature())
+  while((nxtFeat = area_->GetNextFeature()) != NULL)
   {
     if(area_->DeleteFeature(nxtFeat->GetFID()) != OGRERR_NONE)
       ROS_ERROR("Error deleting area feature");
@@ -148,7 +148,7 @@ double HazardMap::ag_cost(OGRLineString *traj_safe, OGRLineString *traj_close, O
   OGRFeature *feat;
   double cost = 0;
   area_->ResetReading();
-  while(feat = area_->GetNextFeature())
+  while((feat = area_->GetNextFeature()) != NULL)
   {
     OGRGeometry *geom;
     geom = feat->GetGeometryRef();
