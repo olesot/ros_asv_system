@@ -25,7 +25,7 @@ static const double RAD2DEG = 180.0f/PI;
 // Utils
 void rot2d(double yaw, Eigen::Vector2d &res);
 
-simulationBasedMpc::simulationBasedMpc() : 	T_(300.0), 				// 150.0  //300
+simulationBasedMpc::simulationBasedMpc(int use_map) : 	T_(300.0), 				// 150.0  //300
 											DT_(0.5), 				//   0.05 // 0.5
 											P_(1), 					//   1.0
 											Q_(4.0), 				//   4.0
@@ -137,9 +137,12 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 				}
 			}
                         // CALCULATE POSITION HERE!
-                        double ag_cost = map_->ag_cost(asv->safe_, asv->close_, asv->ahead_);
-                        ROS_INFO("AG_cost: %f", ag_cost);
-                        cost_i += ag_cost;
+                        if(use_map)
+                        {
+                                double ag_cost = map_->ag_cost(asv->safe_, asv->close_, asv->ahead_);
+                                ROS_INFO("AG_cost: %f", ag_cost);
+                                cost_i += ag_cost;
+                        }
                         /*
                         if(geom_->Intersects(asv->line_))
                         {

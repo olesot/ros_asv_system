@@ -18,7 +18,7 @@ class simulationBasedMpc
 	
 	public:
 		/// Constructor
-		simulationBasedMpc();
+		simulationBasedMpc(int use_map);
 		/// Destructor
 		~simulationBasedMpc();
 		
@@ -53,6 +53,7 @@ class simulationBasedMpc
 		
 		
 		private:
+                int use_map;
 
 		Eigen::Vector3d asv_pose_;
 		Eigen::Vector3d asv_twist_;

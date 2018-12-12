@@ -19,9 +19,13 @@ int main(int argc, char *argv[])
 	ROS_INFO("Starting sm_mpc_node");
 	
 	ros::NodeHandle n;
-	
+
+        int use_map;
+        if(!n.getParam("/sb_mpc_node/use_map/", use_map))
+          ROS_ERROR("Error getting parameter usemap.");
+
 	simulationBasedMpcNode sb_mpc_node;
-	simulationBasedMpc *sb_mpc = new simulationBasedMpc;
+	simulationBasedMpc *sb_mpc = new simulationBasedMpc(use_map);
 	
 	ros::Publisher cmd_pub = n.advertise<geometry_msgs::Twist>("asv/cmd_vel",10);
 	

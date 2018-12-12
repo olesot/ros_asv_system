@@ -1,4 +1,5 @@
 ﻿<launch>
+  <arg name="use_map" default="0" />
   <arg name="u_d" default="3.0" />
   <arg name="waypoint_file" default="$(find asv_simulator)/config/waypoints/asv_waypoint_list.yaml" />
   <arg name="vessel_param_file" default="$(find asv_simulator)/config/parameters/viknes.yaml" />
@@ -50,7 +51,9 @@
           name="sb_mpc_node"
           type="asv_ctrl_sb_mpc_node"
           respawn="false"
-          output="screen" />
+          output="screen">
+          <param name="use_map" value="$(arg use_map)" />
+    </node>
   </group>
     
 </launch>
