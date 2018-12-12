@@ -267,7 +267,7 @@ if __name__ == "__main__":
     u_d = rospy.get_param("~u_d", 2.0)
     R2 = rospy.get_param("~acceptance_radius", 20)**2
     dt = rospy.get_param("~update_rate", .2)
-    de = rospy.get_param("~lookahead_distance", 40.0)
+    de = rospy.get_param("~lookahead_distance", 100.0)
     Ki = rospy.get_param("~integral_gain", 0.0)
     max_integral_correction = rospy.get_param("~max_integral_correction", np.pi*20/180)
 

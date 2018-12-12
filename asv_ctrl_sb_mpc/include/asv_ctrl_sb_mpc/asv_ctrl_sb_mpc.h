@@ -53,7 +53,7 @@ class simulationBasedMpc
 		
 		
 		private:
-                int use_map;
+                int use_map_;
 
 		Eigen::Vector3d asv_pose_;
 		Eigen::Vector3d asv_twist_;

@@ -32,20 +32,21 @@ simulationBasedMpc::simulationBasedMpc(int use_map) : 	T_(300.0), 				// 150.0  
 											D_CLOSE_(200.0),		// 200.0
 											D_SAFE_(40.0),			//  40.0
 											K_COLL_(0.5),			//   0.5
-											PHI_AH_(15.0),			//  15.0
+											PHI_AH_(68.5),			//  15.0
 											PHI_OT_(68.5),			//  68.5
 											PHI_HO_(22.5),			//  22.5
 											PHI_CR_(68.5),			//  68.0
-											KAPPA_(2.0),			//   3.0
-											K_P_(4.0),				//   2.5  // 4.0
-											K_CHI_(1.3),			//   1.3
+											KAPPA_(3.0),			//   3.0
+											K_P_(10.0),				//   2.5  // 4.0
+											K_CHI_(1.0),			//   1.3
 											K_DP_(3.5),				//   2.0  // 3.5
-											K_DCHI_SB_(0.9),		//   0.9
-											K_DCHI_P_(1.2)			//   1.2
+											K_DCHI_SB_(0.5),		//   0.9
+											K_DCHI_P_(0.9)			//   1.2
 {
 	n_samp = floor(T_/DT_);
 	asv_pose_ = Eigen::Vector3d(0.0, 0.0, 0.0);
 	asv_twist_ = Eigen::Vector3d(0.0, 0.0, 0.0);
+        use_map_ = use_map;
 };
 
 simulationBasedMpc::~simulationBasedMpc()
@@ -137,7 +138,7 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 				}
 			}
                         // CALCULATE POSITION HERE!
-                        if(use_map)
+                        if(use_map_)
                         {
                                 double ag_cost = map_->ag_cost(asv->safe_, asv->close_, asv->ahead_);
                                 ROS_INFO("AG_cost: %f", ag_cost);
