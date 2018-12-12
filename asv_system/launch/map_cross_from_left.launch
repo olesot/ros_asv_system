@@ -1,23 +1,25 @@
 ﻿<launch>
+  <arg name="use_map" default="0" />
 
   <include file="$(find asv_simulator)/launch/default.launch">
+    <arg name="use_map" value="$(arg use_map)" />
     <arg name="u_d" value="5.0" />
-    <arg name="waypoint_file" value="$(find asv_simulator)/config/waypoints/asv_map_service.yaml" />
+    <arg name="waypoint_file" value="$(find asv_simulator)/config/waypoints/asv_cross_from_left.yaml" />
     <arg name="vessel_model_file" value="$(find asv_simulator)/config/models/viknes.urdf" />
     <arg name="namespace" value="asv" />
     <arg name="shipname" value="asv" />
-    <arg name="initial_state" value="[525.0, -15.0, 3.1415, 1.,0.,0.]" />
+    <arg name="initial_state" value="[520.0, -15.0, 3.1415, 1.,0.,0.]" />
   </include>
 
   <!-- Obstacle ship -->
   <include file="$(find asv_simulator)/launch/default.launch">
-    <arg name="waypoint_file" value="$(find asv_simulator)/config/waypoints/north_to_south2.yaml" />
+    <arg name="waypoint_file" value="$(find asv_simulator)/config/waypoints/obs_cross_from_left.yaml" />
     <arg name="use_vo" value="False" />
     <arg name="use_sb_mpc" value="False" />
     <arg name="vessel_model_file" value="$(find asv_simulator)/config/models/ship1.urdf" />
     <arg name="namespace" value="obstacles/ship1" />
     <arg name="shipname" value="ship1" />
-    <arg name="initial_state" value="[300.0, 110.0, -1.5707, 1., .0, .0]" />
+  <arg name="initial_state" value="[300.0, -110.0, 1.5707, 1., .0, .0]" />
   </include>
 
   <include file="$(find asv_obstacle_tracker)/launch/default.launch"/>
