@@ -8,7 +8,7 @@
     <arg name="vessel_model_file" value="$(find asv_simulator)/config/models/viknes.urdf" />
     <arg name="namespace" value="asv" />
     <arg name="shipname" value="asv" />
-    <arg name="initial_state" value="[200.0, -450.0, 1.5707, 1.,0.,0.]" />
+    <arg name="initial_state" value="[170.0, -480.0, 1.5707, 1.,0.,0.]" />
   </include>
 
   <!-- Obstacle ship -->
@@ -19,7 +19,7 @@
     <arg name="vessel_model_file" value="$(find asv_simulator)/config/models/ship1.urdf" />
     <arg name="namespace" value="obstacles/ship1" />
     <arg name="shipname" value="ship1" />
-    <arg name="initial_state" value="[200.0, -200.0, -1.5707, 1., .0, .0]" />
+    <arg name="initial_state" value="[170.0, -180.0, -1.5707, 1., .0, .0]" />
   </include>
 
   <include file="$(find asv_obstacle_tracker)/launch/default.launch"/>
